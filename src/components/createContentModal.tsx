@@ -9,22 +9,24 @@ import axios from "axios";
 interface CreateContentModalProps {
     open: boolean;
     onClose: () => void;
+    onAddContent: (content: { title: string; link: string; type: ContentTypeType }) => void;
 }
 
-enum ContentType {
-    YouTube = "youtube",
-    Twitter = "twitter"
-}
+export const ContentType = {
+    YouTube: "youtube",
+    Twitter: "twitter"
+} as const;
+export type ContentTypeType = typeof ContentType[keyof typeof ContentType];
 
-export function CreateContentModal({open, onClose}: CreateContentModalProps) {
+export function CreateContentModal({open, onClose, onAddContent}: CreateContentModalProps) {
 
     const titleRef = useRef<HTMLInputElement>(null);
     const linkRef = useRef<HTMLInputElement>(null);
-    const [type, setType] = useState(ContentType.YouTube);
+    const [type, setType] = useState<ContentTypeType>(ContentType.YouTube);
 
     async function addContent() {
-        const title = titleRef.current?.value;
-        const link = linkRef.current?.value;
+        const title = titleRef.current?.value ?? "";
+        const link = linkRef.current?.value ?? "";
         await axios.post(BACKEND_URL + "api/v1/content", {
             link,
             title,
@@ -33,7 +35,8 @@ export function CreateContentModal({open, onClose}: CreateContentModalProps) {
             headers: { 
                 "Authorization": localStorage.getItem("token")
             }
-        })
+        });
+        onAddContent({ title, link, type })
         onClose();
     }
 
